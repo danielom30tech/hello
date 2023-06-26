@@ -1,0 +1,52 @@
+version: '3.8'
+services:
+    hello-app:
+        container_name: hello-app
+        build:
+            context: ../../
+            dockerfile: ./images/php/Dockerfile
+        depends_on:
+            - hello-mysql
+        links:
+            - hello-mysql
+        ports:
+            - "8181:80"
+        networks:
+            - hello-app-network
+        volumes:
+            - type: bind
+              source: ./public
+              target: /var/www/html
+            #- ./config/apache/default.conf:/etc/apache2/sites-enabled/default.conf
+    hello-mysql:
+        platform: linux/x86_64
+        container_name: hello-mysql
+        image: mysql
+        restart: always
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        ports:
+            - "3336:3306"
+        networks:
+            - hello-app-network
+            - hello-database-network
+        volumes:
+            - ./storage/mysql:/var/lib/mysql
+    hello-phpmyadmin:
+        container_name: hello-phpmyadmin
+        image: phpmyadmin
+        ports:
+            - "3312:80"
+        restart: always
+        environment:
+            PMA_HOST: hello-mysql
+            PMA_PASSWORD: ""
+        depends_on:
+            - hello-mysql
+        networks:
+            - hello-database-network
+volumes:
+    source:
+networks:
+  hello-app-network:
+  hello-database-network:
